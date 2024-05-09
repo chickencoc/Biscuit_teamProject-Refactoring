@@ -1,5 +1,5 @@
 # Biscuit - 도서 블로그 네트워크 웹 서비스
-![Biscuit_Architecture](https://raw.githubusercontent.com/chickencoc/Biscuit_teamProject-Public/develop/process/file/Biscuit_Thumbnail.png)
+![Biscuit_Architecture](./docs/images/Biscuit_Thumbnail.png)
 
 
 ## 목차
@@ -59,10 +59,13 @@
 ## 프로젝트 구성
 
 ### 아키텍처
-![Biscuit_Architecture](https://raw.githubusercontent.com/chickencoc/Biscuit_teamProject-Public/develop/process/file/Biscuit_Architecture.png)
+![Biscuit_Architecture](./docs/images/Biscuit_Architecture.png)
 
 ### ERD
-![Biscuit_DB_ERD](https://raw.githubusercontent.com/chickencoc/Biscuit_teamProject-Public/develop/process/file/Biscuit_DB_ERD.png)
+![Biscuit_DB_ERD](./docs/images/Biscuit_DB_ERD.png)
+
+### AWS 인스턴스
+![Biscuit_aws_instance](./docs/images/Biscuit_aws_instance.png)
 
 ### API 목록
 * Book
