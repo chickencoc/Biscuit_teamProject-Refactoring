@@ -48,8 +48,8 @@ public class UserBookclipService {
     }
 
     // 사용자의 북클립 삭제 처리
-    public String delMyClip(BookClipRequestDto req) {
-        Optional<Bookclip> optBookClip = bookclipRepository.findByBook_NoAndUser_No(req.getBookNo(), req.getUserNo());
+    public String delMyClip(long bookNo, long userNo) {
+        Optional<Bookclip> optBookClip = bookclipRepository.findByBook_NoAndUser_No(bookNo, userNo);
 
         if(optBookClip.isPresent()) {
             Bookclip bookClip = optBookClip.get();

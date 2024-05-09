@@ -1,7 +1,7 @@
 package com.project.biscuit.domain.admin.service;
 
-import com.project.biscuit.domain.user.entity.User;
 import com.project.biscuit.domain.user.dto.UserResponseDto;
+import com.project.biscuit.domain.user.entity.User;
 import com.project.biscuit.domain.user.model.Authority;
 import com.project.biscuit.domain.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -16,7 +16,7 @@ public class AdminService {
 
     private final UserRepository userRepository;
 
-    // All user list
+    // 사용자 전체 목록 조회
     public List<UserResponseDto> getUserAll(String type) { // type 설정
         return switch (type) {
             case "All" -> {
@@ -39,33 +39,33 @@ public class AdminService {
         };
     }
 
-    // 권한 변경
+    // 사용자를 관리자로 변경
     @Transactional
-    public String changeAuthority(List<Long> userNo) {
-        if(userNo == null) return "incorrect request";
+    public void changeAuthority(List<Long> userNoList) {
+        if(userNoList.isEmpty())
+            throw new  IllegalArgumentException();
         else {
-            userNo.forEach(item -> {
+            userNoList.forEach(item -> {
                 User user = userRepository.findById(item).orElseThrow(() -> new IllegalArgumentException("Not found User"));
 
                 if (user.getAuthority().equals(Authority.U)) user.setAuthority(Authority.A);
                 else user.setAuthority(Authority.U);
             });
-            return "success";
         }
     }
 
-    // 회원 상태 변경
+    // 사용자의 활성화 상태 변경
     @Transactional
-    public String popToggleUser(List<Long> userNo) {
-        if(userNo == null) return "incorrect request";
+    public void changeUserStatus(List<Long> userNoList) {
+        if(userNoList.isEmpty())
+            throw new  IllegalArgumentException();
         else {
-            userNo.forEach(item -> {
+            userNoList.forEach(item -> {
                 User user = userRepository.findById(item).orElseThrow(() -> new IllegalArgumentException("Not found User"));
 
                 if (user.getQuitYn().equals("N")) user.setQuitYn("Y");
                 else user.setQuitYn("N");
             });
-            return "success";
         }
     }
 }

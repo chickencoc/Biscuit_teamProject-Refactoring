@@ -1,10 +1,8 @@
 package com.project.biscuit.domain.book.controller;
 
-import com.project.biscuit.domain.bookclip.dto.BookClipRequestDto;
-import com.project.biscuit.domain.book.dto.BookRequestDto;
 import com.project.biscuit.domain.book.dto.BookResponseDto;
-import com.project.biscuit.domain.user.service.UserBookclipService;
 import com.project.biscuit.domain.book.service.BookService;
+import com.project.biscuit.domain.user.service.UserBookclipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,23 +17,33 @@ public class BookController {
     private final BookService bookService;
     private final UserBookclipService userBookclipService;
 
-    @PostMapping("/list")
-    public String bookList(@RequestBody BookRequestDto req) {
-        return bookService.searchBooks(req);
+    // 도서 검색
+    @GetMapping("/list")
+    public String bookList(@RequestParam String title,
+                           @RequestParam int display,
+                           @RequestParam int start,
+                           @RequestParam String sort) {
+        return bookService.searchBooks(title, display, start, sort);
     }
 
-    @PostMapping("/info")
-    public ResponseEntity<BookResponseDto> bookInfo(@RequestBody BookRequestDto req) throws IOException, InterruptedException {
-        return ResponseEntity.ok(bookService.searchBookInfo(req));
+    // 도서 조회
+    @GetMapping("/info/{isbn}")
+    public ResponseEntity<BookResponseDto> bookInfo(@PathVariable String isbn,
+                                                    @RequestParam String userId) throws IOException, InterruptedException {
+        return ResponseEntity.ok(bookService.searchBookInfo(isbn, userId));
     }
 
-    @PostMapping("/clip")
-    public String bookClip(@RequestBody BookRequestDto req) {
-        return bookService.inClip(req);
+    // 북클립 추가
+    @PostMapping("/user/{userNo}/clip/{isbn}")
+    public String bookClip(@PathVariable long userNo,
+                           @PathVariable String isbn) {
+        return bookService.inClip(userNo, isbn);
     }
 
-    @PutMapping("/delclip")
-    public String delBookClip(@RequestBody BookClipRequestDto req) {
-        return userBookclipService.delMyClip(req);
+    // 북클립 삭제
+    @DeleteMapping("/user/{userNo}/delclip/{bookNo}")
+    public String delBookClip(@PathVariable long userNo,
+                              @PathVariable long bookNo) {
+        return userBookclipService.delMyClip(bookNo, userNo);
     }
 }
