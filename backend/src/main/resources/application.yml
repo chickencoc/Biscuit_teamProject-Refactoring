@@ -1,0 +1,61 @@
+server.port : ${SERVER_PORT}
+
+spring:
+  datasource:
+    url: ${SPRING_DB_URL}
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${SPRING_DB_USERNAME}
+    password: ${SPRING_DB_PASSWORD}
+
+  jpa:
+    show-sql: true
+    # defer-datasource-initialization: true  # data.sql 사용을 위해서 필수적으로 등록
+    properties:
+      hibernate:
+        format_sql: true  # sql문 pretty하게 보여줌
+        use_sql_comments: true
+    generate-ddl: false   # true, false
+    hibernate:
+      ddl-auto: none    # create(처음생성시,테스트), create-drop, update(db가 확정되었을 때,수정단계일때), validate, none(최종)
+
+  sql:
+    init:
+      mode: never
+      # always: embeded db가 아닌 외부 db 사용시 spring boot를 실행할때 마다 data.sql schema.sql import.sql을 항상 실행
+      # never: data.sql schema.sql import.sql을 실행하지 않음
+      encoding: utf-8
+
+  security:
+    user: # spring security 기본 아이디와 암호
+      name: user
+      password: 1234
+
+  devtools:
+    livereload:
+      enabled: true
+
+  thymeleaf:
+    prefix: classpath:templates/
+    suffix: .html
+    cache: false
+
+  servlet:
+    multipart:
+      maxFileSize: 5MB
+      maxRequestSize: 5MB
+
+
+jwt:
+  secret: ${SPRING_JWT_SECRET}
+
+
+naver:
+  api:
+    clientId: ${NAVER_API_CLIENT_ID}
+    clientSecret: ${NAVER_API_CLIENT_SECRET}
+
+
+#upload:
+#  #  path : .src/resources/static/images/event/ ## 이거 배포할때 수정
+#  # 일단 테스트할때는 절대경로로 되어있는데, 본인 페이지의 /public/images/event 로 지정해놔야 가능
+#  path: C:\\Users\\EUNN\\Desktop\\project\\Biscuit_teamProject\\frontend\\public\\images\\
