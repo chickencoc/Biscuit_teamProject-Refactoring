@@ -1,6 +1,6 @@
 package com.project.biscuit.domain.user.controller;
 
-import com.project.biscuit.domain.bookclass.dto.BkclassMemReqDto;
+import com.project.biscuit.domain.bookclass.dto.BkclassMemRequestDto;
 import com.project.biscuit.domain.bookclass.dto.BookclassReponseDto;
 import com.project.biscuit.domain.bookclip.dto.BookClipRequestDto;
 import com.project.biscuit.domain.bookclip.dto.BookClipResponseDto;
@@ -67,13 +67,13 @@ public class MyInfoController {
 
     // 사용자 북클래스 개설 목록 조회
     @PostMapping("/class/open")
-    public ResponseEntity<List<BookclassReponseDto>> openedClass(@RequestBody BkclassMemReqDto req) {
+    public ResponseEntity<List<BookclassReponseDto>> openedClass(@RequestBody BkclassMemRequestDto req) {
         return ResponseEntity.ok(bookclassService.getOpenedClass(req));
     }
 
     // 사용자 북클래스 참여 목록 조회
     @PostMapping("/class/party")
-    public ResponseEntity<List<BookclassReponseDto>> participatedClass(@RequestBody BkclassMemReqDto req) {
+    public ResponseEntity<List<BookclassReponseDto>> participatedClass(@RequestBody BkclassMemRequestDto req) {
         return ResponseEntity.ok(bookclassService.getParticipatedClass(req));
     }
 

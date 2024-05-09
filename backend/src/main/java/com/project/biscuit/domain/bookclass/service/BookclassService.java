@@ -7,7 +7,7 @@ import com.project.biscuit.domain.bookclass.entity.BookclassMember;
 import com.project.biscuit.domain.bookclass.repository.BookclassMemberRepository;
 import com.project.biscuit.domain.bookclass.repository.BookclassRepository;
 import com.project.biscuit.domain.user.entity.User;
-import com.project.biscuit.domain.bookclass.dto.BkclassMemReqDto;
+import com.project.biscuit.domain.bookclass.dto.BkclassMemRequestDto;
 import com.project.biscuit.domain.bookclass.dto.BookclassReponseDto;
 import com.project.biscuit.domain.bookclass.dto.BookclassRequestDto;
 import com.project.biscuit.domain.book.repository.BookRepository;
@@ -29,14 +29,6 @@ public class BookclassService {
     private final BookclassMemberRepository bkclassMemRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
-
-    // 재활용하기 위한 함수
-    // 클래스 모임 종료 일자 지나면 종료됨(code: E)으로 변경 시키기
-    private void checkEndDate(List<Bookclass> bkc) {
-        bkc.stream().forEach(item -> {
-            Bookclass temp = bookclassRepository.findById(item.getNo()).get();
-        }); // 작업중
-    }
 
     // 참여 여부, 클래스 참여 인원 수 response에 반영
     private List<BookclassReponseDto> chkJoinAndNumOfMem(List<Bookclass> bkcList, boolean partyChk, Long userNo) {
@@ -75,7 +67,7 @@ public class BookclassService {
 
     // Create Bookclass
     @Transactional
-    public BookclassReponseDto apply(BookclassRequestDto req) {
+    public BookclassReponseDto createBookclass(BookclassRequestDto req) {
         Optional<Book> optBooks = bookRepository.findByIsbn(req.getIsbn());
         Optional<User> optUser = userRepository.findByUserId(req.getUserId());
         Bookclass bookclass = req.toEntity(optUser.get(), optBooks.get());
@@ -87,14 +79,14 @@ public class BookclassService {
     }
 
     // Read : All Bookclass with status Y
-    public List<BookclassReponseDto> getBookclassAll(Long userNo) {
+    public List<BookclassReponseDto> findAllBookclass(Long userNo) {
         List<Bookclass> bkcList = bookclassRepository.findByStatusOrderByUpdatedAtDesc(ClassStatus.Y);
         if(userNo == null) return chkJoinAndNumOfMem(bkcList, false, null);
         else return chkJoinAndNumOfMem(bkcList, true, userNo);
     }
 
     // Read : Bookclass Detail
-    public BookclassReponseDto getBookclass(long classNo, Long userNo) {
+    public BookclassReponseDto findBookclass(long classNo, Long userNo) {
         Bookclass bkc = bookclassRepository.findById(classNo).orElseThrow(() -> new IllegalArgumentException("not found : " + classNo));
 
         if(userNo != 0L) {
@@ -110,7 +102,7 @@ public class BookclassService {
     }
 
     // Read : Bookclass for edit
-    public Bookclass getBookclassForEdit(long bookclassId) {
+    public Bookclass findBookclassForEdit(long bookclassId) {
         return bookclassRepository.findById(bookclassId).orElseThrow(
                 () -> new IllegalArgumentException("not found : " + bookclassId)
         );
@@ -118,7 +110,7 @@ public class BookclassService {
 
     // Update : Bookclass
     @Transactional // 트랜잭션 메서드 : DB에서 데이터를 바꾸기 위한 작업 단위 (ex: 계좌이체(AtoB) => A계좌 출금 후, B계좌 입금)
-    public Bookclass update(Long bookclassId, BookclassRequestDto req) {
+    public Bookclass updateBookclass(Long bookclassId, BookclassRequestDto req) {
         Bookclass bookclass = bookclassRepository.findById(bookclassId).orElseThrow(
                 () -> new IllegalArgumentException("not found : " + bookclassId)
         );
@@ -128,7 +120,7 @@ public class BookclassService {
     }
 
     // 북클래스 제목, 작성자 이름으로 검색
-    public List<BookclassReponseDto> searchClass(String keyword, Long userNo) {
+    public List<BookclassReponseDto> searchBookclass(String keyword, Long userNo) {
         List<Bookclass> byTitle = bookclassRepository.findByTitleContaining(keyword);
         List<Bookclass> byName = bookclassRepository.findByUserNo_NicknameContaining(keyword);
         List<Bookclass> bckList = new ArrayList<>();
@@ -149,16 +141,16 @@ public class BookclassService {
 
     // 사용자 action ----
     // 클래스 참여
-    public String inClass(BkclassMemReqDto req) {
-        boolean inChk = bkclassMemRepository.existsByBookclass_NoAndUser_No(req.getBookclassNo(), req.getUserNo());
+    public String userJoinBookclass(long classNo, long userNo) {
+        boolean inChk = bkclassMemRepository.existsByBookclass_NoAndUser_No(classNo, userNo);
         if(inChk) {
             return "already in";
         } else {
-            Bookclass bkc = bookclassRepository.findById(req.getBookclassNo()).orElseThrow(() -> new IllegalArgumentException("Not Exist Class"));
-            Long nowCnt = bkclassMemRepository.countByBookclassNo(req.getBookclassNo());
+            Bookclass bkc = bookclassRepository.findById(classNo).orElseThrow(() -> new IllegalArgumentException("Not Exist Class"));
+            Long nowCnt = bkclassMemRepository.countByBookclassNo(classNo);
 
             if(nowCnt < bkc.getMemberCnt()) {
-                Optional<User> optUser = userRepository.findById(req.getUserNo());
+                Optional<User> optUser = userRepository.findById(userNo);
 
                 BookclassMember bckmember = BookclassMember.toEntity(bkc, optUser.get());
                 bkclassMemRepository.save(bckmember);
@@ -172,16 +164,13 @@ public class BookclassService {
     }
 
     // 클래스 참여 취소
-    public String outClass(BkclassMemReqDto req) {
-        boolean inChk = bkclassMemRepository.existsByBookclass_NoAndUser_No(req.getBookclassNo(), req.getUserNo());
+    public String userLeaveBookclass(long classNo, long userNo) {
+        boolean inChk = bkclassMemRepository.existsByBookclass_NoAndUser_No(classNo, userNo);
         if(!inChk) {
             return "not in";
         } else {
-            Optional<BookclassMember> optBkcMem = bkclassMemRepository.findByBookclass_NoAndUser_No(req.getBookclassNo(), req.getUserNo());
+            Optional<BookclassMember> optBkcMem = bkclassMemRepository.findByBookclass_NoAndUser_No(classNo, userNo);
             BookclassMember bkcMem = optBkcMem.get();
-
-//            bkcMem.setDelyn("Y");
-//            bkclassMemRepository.save(bkcMem);
 
             bkclassMemRepository.deleteById(bkcMem.getNo());
 
@@ -190,7 +179,7 @@ public class BookclassService {
     }
 
     // 사용자의 북클래스 개설 목록 가져오기
-    public List<BookclassReponseDto> getOpenedClass(BkclassMemReqDto req) {
+    public List<BookclassReponseDto> getOpenedClass(BkclassMemRequestDto req) {
         List<Bookclass> bkcList = switch (req.getSortNum()) {
             case 0 -> bookclassRepository.findByUserNo_NoOrderByCreatedAtDesc(req.getUserNo()); // 전체 (정렬 기준)
             case 1 -> bookclassRepository.findByUserNo_NoOrderByCreatedAtDesc(req.getUserNo())
@@ -205,7 +194,7 @@ public class BookclassService {
     }
 
     // 사용자의 북클래스 참여 목록 가져오기
-    public List<BookclassReponseDto> getParticipatedClass(BkclassMemReqDto req) {
+    public List<BookclassReponseDto> getParticipatedClass(BkclassMemRequestDto req) {
         List<BookclassMember> bkmcList = switch (req.getSortNum()) {
             case 0 -> bkclassMemRepository.findByUser_NoOrderByCreatedAtDesc(req.getUserNo()); // 전체 (정렬 기준)
             case 1 -> bkclassMemRepository.findByUser_NoOrderByCreatedAtDesc(req.getUserNo())
@@ -234,12 +223,12 @@ public class BookclassService {
 
     // 관리자 기능 =====
     // Delete : Bookclass
-    public void delete(Long bookclassId) {
-        bookclassRepository.deleteById(bookclassId);
+    public void deleteBookclass(Long classNo) {
+        bookclassRepository.deleteById(classNo);
     };
 
     // 전체 목록 및 승인해야할 목록 가져오기
-    public List<BookclassReponseDto> getAllclass(int sortNum) {
+    public List<BookclassReponseDto> awaitBookclass(int sortNum) {
         if(sortNum == 1) { // 승인해야할 목록
             List<Bookclass> bkcList = bookclassRepository.findByStatusOrderByUpdatedAtDesc(ClassStatus.A);
             return chkJoinAndNumOfMem(bkcList, false, null);
@@ -252,9 +241,9 @@ public class BookclassService {
 
     // 북클래스 상태 변경
     @Transactional
-    public void chageStatus(List<Long> numList, String status) {
-        numList.forEach(e -> {
-            Bookclass bkc = bookclassRepository.findById(e).orElseThrow(() -> new IllegalArgumentException("not found class"));
+    public void changeBookclassStatus(List<Long> classNoList, String status) {
+        classNoList.forEach(classNo -> {
+            Bookclass bkc = bookclassRepository.findById(classNo).orElseThrow(() -> new IllegalArgumentException("not found class"));
             bkc.setStatus(ClassStatus.valueOf(status));
         });
     }

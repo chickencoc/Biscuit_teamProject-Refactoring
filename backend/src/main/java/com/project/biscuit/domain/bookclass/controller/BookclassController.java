@@ -1,11 +1,11 @@
 package com.project.biscuit.domain.bookclass.controller;
 
-import com.project.biscuit.domain.bookclass.entity.Bookclass;
-import com.project.biscuit.domain.bookclass.dto.BkclassMemReqDto;
 import com.project.biscuit.domain.bookclass.dto.BookclassEditReponseDto;
 import com.project.biscuit.domain.bookclass.dto.BookclassReponseDto;
 import com.project.biscuit.domain.bookclass.dto.BookclassRequestDto;
+import com.project.biscuit.domain.bookclass.entity.Bookclass;
 import com.project.biscuit.domain.bookclass.service.BookclassService;
+import com.project.biscuit.global.model.EntityNoListRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,69 +18,85 @@ import java.util.List;
 public class BookclassController {
     private final BookclassService bookclassService;
 
-    @PostMapping("/apply")  // Create : POST -> "/api/bookclass/apply" 클래스 개설 신청
-    public ResponseEntity<BookclassReponseDto> applyBookclass(@RequestBody BookclassRequestDto req) {
-        return ResponseEntity.ok(bookclassService.apply(req));
+    // 클래스 개설 신청
+    @PostMapping("/create")
+    public ResponseEntity<BookclassReponseDto> createBookclass(@RequestBody BookclassRequestDto req) {
+        return ResponseEntity.ok(bookclassService.createBookclass(req));
     }
 
-    @GetMapping("/list/{userNo}")    // Read : GET -> "/api/bookclass/list/{sort}" 북클래스 목록
-    public ResponseEntity<List<BookclassReponseDto>> findAllBookclass(@PathVariable long userNo) {
-        return ResponseEntity.ok().body(bookclassService.getBookclassAll(userNo));
+    // 북클래스 목록 조회 (사용자 참여 여부 포함)
+    @GetMapping("/list")
+    public ResponseEntity<List<BookclassReponseDto>> findAllBookclass(@RequestParam long userNo) {
+        return ResponseEntity.ok(bookclassService.findAllBookclass(userNo));
     }
 
-    @GetMapping("/classNo={id}&userNo={no}")   // Read : GET -> "/api/bookclass/classNo={id}&userNo={no}" 북클래스 상세, 사용자 참여 여부 포함
-    public ResponseEntity<BookclassReponseDto> findBookclass(@PathVariable Long id, @PathVariable Long no) {
-        return ResponseEntity.ok().body(bookclassService.getBookclass(id, no));
+    // 북클래스 상세 조회 (사용자 참여 여부 포함)
+    @GetMapping("/view/{classNo}")
+    public ResponseEntity<BookclassReponseDto> findBookclass(@PathVariable Long classNo,
+                                                             @RequestParam Long userNo) {
+        return ResponseEntity.ok(bookclassService.findBookclass(classNo, userNo));
     }
 
-    @GetMapping("/{id}/e")   // Read : GET -> "/api/bookclass/{no}/e" 북클래스 수정용 상세 정보 가져오기
-    public ResponseEntity<BookclassEditReponseDto> findBookclassForEdit(@PathVariable Long id) {
-        Bookclass bookclass = bookclassService.getBookclassForEdit(id);
-        return ResponseEntity.ok().body(BookclassEditReponseDto.of(bookclass));
+    // 북클래스 수정용 정보 조회
+    @GetMapping("/view/edit/{classNo}")
+    public ResponseEntity<BookclassEditReponseDto> findBookclassForEdit(@PathVariable Long classNo) {
+        Bookclass bookclass = bookclassService.findBookclassForEdit(classNo);
+        return ResponseEntity.ok(BookclassEditReponseDto.of(bookclass));
     }
 
-    @PutMapping("/{id}/update")  // Update : PUT -> "/api/bookclass/{no}/update" 북클래스 수정
-    public ResponseEntity<Bookclass> updateBookclass(@PathVariable Long id, @RequestBody BookclassRequestDto req) {
-        Bookclass updatedBookclass = bookclassService.update(id, req);
-        return ResponseEntity.ok().body(updatedBookclass);
+    // 북클래스 정보 수정
+    @PatchMapping("/update/{classNo}")
+    public ResponseEntity<Bookclass> updateBookclass(@PathVariable Long classNo,
+                                                     @RequestBody BookclassRequestDto requestDto) {
+        Bookclass updatedBookclass = bookclassService.updateBookclass(classNo, requestDto);
+        return ResponseEntity.ok(updatedBookclass);
     }
 
-    @GetMapping("/search/q={keyword}&u={userNo}")
-    public ResponseEntity<List<BookclassReponseDto>> searchBookclass(@PathVariable String keyword,@PathVariable Long userNo) {
-        return ResponseEntity.ok().body(bookclassService.searchClass(keyword, userNo));
-    }
-
-
-    // 사용자 action -------------------
-    // 참여하기
-    @PostMapping("/party/in")
-    public ResponseEntity<String> inClass(@RequestBody BkclassMemReqDto req) { // String이 json으로 안넘어가고 그냥 문자열로 넘어감
-        return ResponseEntity.ok().body(bookclassService.inClass(req));
-    }
-
-    // 참여 취소하기
-    @PostMapping("/party/out")
-    public String outClass(@RequestBody BkclassMemReqDto req) {
-        return bookclassService.outClass(req);
+    // 북클래스 검색
+    @GetMapping("/search")
+    public ResponseEntity<List<BookclassReponseDto>> searchBookclass(@RequestParam String keyword,
+                                                                     @RequestParam Long userNo) {
+        return ResponseEntity.ok(bookclassService.searchBookclass(keyword, userNo));
     }
 
 
-    // 관리지 기능 -----------------
-    @GetMapping("/delete/{no}") // delete bookclass
-    public ResponseEntity<String> deleteBookclass(@PathVariable long no) {
-        bookclassService.delete(no);
-        return ResponseEntity.ok().body("success");
+    // 사용자 기능 -------------------
+
+    // 북클래스 참여하기
+    @PostMapping("/join/{classNo}/user/{userNo}")
+    public ResponseEntity<String> userJoinClass(@PathVariable long classNo,
+                                                @PathVariable long userNo) {
+        return ResponseEntity.ok(bookclassService.userJoinBookclass(classNo, userNo));
     }
 
-    @GetMapping("/all/{sortNum}") // get all bookclass or applied bookclass for Admin
-    public ResponseEntity<List<BookclassReponseDto>> getAllBookclass(@PathVariable int sortNum) {
-        return ResponseEntity.ok().body(bookclassService.getAllclass(sortNum));
+    // 북클래스 참여 취소하기
+    @DeleteMapping("/leave/{classNo}/user/{userNo}")
+    public ResponseEntity<String> userLeaveClass(@PathVariable long classNo,
+                                                 @PathVariable long userNo) {
+        return ResponseEntity.ok(bookclassService.userLeaveBookclass(classNo, userNo));
     }
 
-    @GetMapping("/status/list={numList}&status={status}") // update bookclass status
-    public ResponseEntity<String> getAllBookclass(@PathVariable List<Long> numList, @PathVariable String status) {
-        bookclassService.chageStatus(numList, status);
-        return ResponseEntity.ok().body("success");
+
+    // 관리자 기능 -----------------
+
+    // 북클래스 삭제
+    @DeleteMapping("/admin/delete/{classNo}")
+    public ResponseEntity<Void> deleteBookclass(@PathVariable long classNo) {
+        bookclassService.deleteBookclass(classNo);
+        return ResponseEntity.ok().build();
+    }
+
+    // 북클래스 전체 목록 또는 승인 대기 목록 조회
+    @GetMapping("/admin/list")
+    public ResponseEntity<List<BookclassReponseDto>> awaitBookclass(@RequestParam int sort) {
+        return ResponseEntity.ok().body(bookclassService.awaitBookclass(sort));
+    }
+
+    // 북클래스 개설 상태 변경
+    @PatchMapping("/admin/change/status/{status}")
+    public ResponseEntity<Void> changeBookclassStatus(@PathVariable String status, @RequestBody EntityNoListRequestDto requestDto) {
+        bookclassService.changeBookclassStatus(requestDto.getEntityNoList(), status);
+        return ResponseEntity.ok().build();
     }
 
 }

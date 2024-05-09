@@ -4,13 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.project.biscuit.domain.book.dto.BookResponseDto;
+import com.project.biscuit.domain.book.entity.Book;
 import com.project.biscuit.domain.book.repository.BookRepository;
 import com.project.biscuit.domain.bookclip.entity.Bookclip;
-import com.project.biscuit.domain.book.entity.Book;
-import com.project.biscuit.domain.user.entity.User;
-import com.project.biscuit.domain.book.dto.BookRequestDto;
-import com.project.biscuit.domain.book.dto.BookResponseDto;
 import com.project.biscuit.domain.bookclip.repository.BookclipRepository;
+import com.project.biscuit.domain.user.entity.User;
 import com.project.biscuit.domain.user.repository.UserRepository;
 import com.project.biscuit.global.util.NaverBookAPI;
 import com.project.biscuit.global.util.ScrapingBookInfo;
@@ -33,18 +32,18 @@ public class BookService {
     private final BookclipRepository bookclipRepository;
     private final UserRepository userRepository;
 
-    // 도서 검색 결과
-    public String searchBooks(BookRequestDto req) {
-        return naverBookAPI.searchBook(req.getTitle(), req.getDisplay(), req.getSort(), req.getStart());
+    // 도서 검색
+    public String searchBooks(String title, int display, int start, String sort) {
+        return naverBookAPI.searchBook(title, display, sort, start);
     }
 
-    // 도서 한권 정보
-    public BookResponseDto searchBookInfo(BookRequestDto req) throws IOException, InterruptedException {
-        Optional<Book> optBooks = bookRepository.findByIsbn(req.getIsbn());
-        Optional<User> optUser = userRepository.findByUserId(req.getUserId());
+    // 도서 조회
+    public BookResponseDto searchBookInfo(String isbn, String userId) throws IOException, InterruptedException {
+        Optional<Book> optBooks = bookRepository.findByIsbn(isbn);
+        Optional<User> optUser = userRepository.findByUserId(userId);
 
         if(optBooks.isEmpty()) {
-            String json = naverBookAPI.searchBookByIsbn(req.getIsbn());
+            String json = naverBookAPI.searchBookByIsbn(isbn);
             JsonNode jsonNode = parseJsonNode(json);
             Book book = parseBooksObj(jsonNode);
 
@@ -65,11 +64,10 @@ public class BookService {
         }
     }
 
-    // 도서 찜 목록에 저장
-    // 찜목록에 DelYn = "N"인 경우는 프론트에서 실행 막음
-    public String inClip(BookRequestDto req) {
-        Optional<Book> optBooks = bookRepository.findByIsbn(req.getIsbn());
-        Optional<User> optUser = userRepository.findByUserId(req.getUserId());
+    // 북클립 추가
+    public String inClip(long userNo, String isbn) {
+        Optional<Book> optBooks = bookRepository.findByIsbn(isbn);
+        Optional<User> optUser = userRepository.findById(userNo);
         Optional<Bookclip> optBookClip = bookclipRepository.findByBook_NoAndUser_No(optBooks.get().getNo(), optUser.get().getNo());
 
         if(optBooks.isPresent() & optUser.isPresent()) {
